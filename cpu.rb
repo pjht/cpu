@@ -155,7 +155,7 @@ class CPU
         reg1=reginfo[0..3].to_i(2)
         reg2=reginfo[4..7].to_i(2)
         puts "Moving R#{reg1} to R#{reg2}" if @debug
-        puts "Setting R#{reg2} to #{@registers[reg1].to_s(16).rjust(2,"0")}"
+        puts "Setting R#{reg2} to #{@registers[reg1].to_s(16).rjust(2,"0")}" if @debug
         @registers[reg2]=@registers[reg1]
         puts "Registers:#{registers.inspect}" if @debug
       when 11 #10110000-HLT,10110001-RET
