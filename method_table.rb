@@ -12,6 +12,7 @@ class MethodTable < Hash
   end
 
   def method_missing(mname,*args)
+    super(mname) unless self.include? mname.to_sym
     call(mname,*args)
   end
 
@@ -19,7 +20,6 @@ class MethodTable < Hash
     mname=mname.to_sym
     func=self[mname]
     raise ArgumentError, "No method #{mname}." if func==nil
-    puts "Calling #{mname}"
-    func.(*args)
+    func.call(*args)
   end
 end
