@@ -132,8 +132,8 @@ class CPU
         i+=1
         reg2=reginfo[0..3].to_i(2)
         reg1=reginfo[4..7].to_i(2)
-        data=@alu.run(arg,@registers[reg1],@registers[reg2])
         puts "#{@@ops[arg]} R#{reg1} and R#{reg2} and putting the result in R#{dest}"  if @debug
+        data=@alu.run(arg,@registers[reg1],@registers[reg2])
         puts "Setting R#{dest} to #{data.to_s(16).rjust(2,"0")}" if @debug
         @registers[dest]=data
         puts "Registers:#{registers.inspect}" if @debug
@@ -144,8 +144,8 @@ class CPU
         dest=reginfo[4..7].to_i(2)
         data=@ram[i]
         i+=1
-        data=@alu.run(arg,@registers[reg1],data)
         puts "#{@@ops[arg]} R#{reg1} and #{data} and putting the result in R#{dest}" if @debug
+        data=@alu.run(arg,@registers[reg1],data)
         puts "Setting R#{dest} to #{data.to_s(16).rjust(2,"0")}" if @debug
         @registers[dest]=data
         puts "Registers:#{registers.inspect}" if @debug
@@ -160,7 +160,7 @@ class CPU
         puts "Registers:#{registers.inspect}" if @debug
       when 11 #10110000-HLT,10110001-RET
         puts "Halting" if arg==0 and @debug
-        puts if @debug 
+        puts if @debug
         break if arg==0
         # TODO: Implement return here
       end
@@ -170,7 +170,7 @@ class CPU
         puts
       end
     end
-    print "Memory at finish:#{ram.inspect}"  if @debug
+    puts "Memory at finish:#{ram.inspect}"  if @debug
     puts "Registers at finish:#{registers.inspect}" if @debug
   end
 
