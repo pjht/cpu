@@ -12,10 +12,14 @@ class MethodTable < Hash
   end
 
   def method_missing(mname,*args)
-    self[mname].(*args)
+    call(mname,*args)
   end
 
   def call(mname,*args)
-    self[mname].(*args)
+    mname=mname.to_sym
+    func=self[mname]
+    raise ArgumentError, "No method #{mname}." if func==nil
+    puts "Calling #{mname}"
+    func.(*args)
   end
 end
