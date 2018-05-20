@@ -1,0 +1,29 @@
+# gets:
+#   LODI 0,0
+#   OUT 0,1
+#   .loop:
+#     IN 0,0
+#     JMPC 2,.loop
+#     ARITI CMP,0,0,0x0A
+#     JMPC 2,.exit
+#     STORP 0,0
+#     ARITI ADD,14,14,1
+#     JMPC 0,.loop
+#   .exit:
+#   RET
+
+LODIP 0,buf
+LODI 0,0
+OUT 0,1
+.loop:
+  IN 0,0
+  JMPC 1,.loop
+  ARITI CMP,0,0,0x0A
+  JMPC 2,.exit
+  STORP 0,0
+  ARITI ADD,14,14,1
+  JMPC 0,.loop
+.exit:
+HLT
+
+buf:0

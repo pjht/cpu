@@ -7,10 +7,10 @@
 0110oooo 0000rrrr rrrrrrrr-ARITH op,dest,s1,s2 (0x6o 0x0r 0xrr)
 0111oooo rrrrrrrr dddddddd-ARITI op,dest,s1,d (0x7o 0xrr 0xdd)
 10000000 rrrrrrrr-MOV r1,r2 (0x80 0xrr)
-TBI:
 10010fff aaaaaaaa aaaaaaaa-JMPC flags,addr (0x9f 0xaa 0xaa)
+10110000-HLT (0xb0)
+TBI:
 10100000 aaaaaaaa aaaaaaaa-CALL addr (0xa0 0xaa 0xaa)
-10110000-HLT (Implemented) (0xb0)
 10110001-RET (0xb1)
 1100rrrr pppppppp-IN r,p (0xcr 0xpp)
 1101rrrr pppppppp-OUT r,p (0xdr 0xpp)
@@ -19,6 +19,7 @@ TBI:
 ALU opcodes:
 0000-ADD
 0001-SUB
+TBI:
 0010-ADC
 0011-SBB
 0100-CMP
