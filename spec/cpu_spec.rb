@@ -67,4 +67,9 @@ describe CPU do
     @cpu.run
     expect(@cpu.registers.compact).to eq [0x08,0x08]
   end
+
+  it "executes the JMPC instruction" do
+    @cpu.setprog([0x70,0x00,0x00,0x91,0x00,0x07,0xB0,0x50,0xFF,0xFF,0x20,0x00])
+    expect {@cpu.run}.to raise_error(ArgumentError)
+  end
 end
