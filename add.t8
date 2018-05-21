@@ -1,11 +1,14 @@
-LODIP 0,0x13
-LOADP 1,0
-ARITI ADD,14,14,1
-LODIP 0,0x13
-LOADP 2,0
-ARITI ADD,14,14,1
-ARITH ADD,0,1,2
-STORP 0,0
-HLT
-0x6
-0x9
+#just a comment
+
+#another one
+START: LODIP 0,0x13 #a comment
+    LOADP 1,0
+    ARITI ADD,14,14,1
+    LODIP 0,0x13
+    LOADP 2,0
+    ARITI ADD,14,14,1   #a comment
+    ARITH ADD,0,1,2
+    STORP 0,0  
+DONE: 
+    HLT
+

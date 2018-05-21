@@ -1,8 +1,12 @@
 require_relative "method_table"
 mtable=MethodTable.new()
-print "Enter .t8 file name:"
-name=gets.chomp!
-name+=".t8" unless name.include? ".t8"
+if ARGV.length > 0
+  name = ARGV[0]
+else
+  print "Enter .t8 file name:"
+  name=gets.chomp!
+  name+=".t8" unless name.include? ".t8"
+end
 $infile=File.read(name)
 $outfile=File.open(name.gsub(".t8",".bin"),"w")
 $ops=["ADD","SUB","ADC","SBB","CMP","AND","OR","NOT"]
@@ -118,23 +122,44 @@ lengths={
   "PUSH"=>1,
   "POP"=>1
 }
+
+def parse_asm_line(line)
+  label = nil
+  op = nil
+  args = []
+  code, comment = line.split("#")
+  if code
+    parts = code.split(" ")
+    if parts.length > 0
+      #line not empty
+      if parts[0].match(/(.+):/)
+        label = parts.shift.chomp
+      end
+      op = parts.shift #first or second token
+      args = parts #anything left
+     end
+  end
+  {:label=>label, :op=>op, :args=>args}
+end
+
 $labels={}
 i=0
+
+#first pass, get label values
 $infile.split("\n").each do |line|
-  next if line==""
-  temp=line.split(" ")
-  op=temp.shift
-  next if op[0]=="#"
-  args=temp.join(" ").split(",").map{|x| conv(x)}
-  if op.match(/(.+):/)
-    lname=$1
-    puts "Label #{lname}"
-    $labels[lname]=i
-  else
-    puts "Instruction #{op}"
-    i+=lengths[op]
+  parsed = parse_asm_line(line)
+  label, op, args = parsed.values_at(:label, :op, :args)
+  if label
+    $labels[label] = i
+    puts "Found Label #{label} at #{i}"
+  end
+  if op
+    puts "Found op #{op} at #{i}"
+    i += lengths[op]
   end
 end
+
+#second pass, generate code
 $infile.split("\n").each do |line|
   next if line==""
   temp=line.split(" ")
