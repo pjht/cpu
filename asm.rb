@@ -67,8 +67,24 @@ def mov(r1,r2)
   $outfile.print 0x80.chr
   write_combined(r1,r2)
 end
+def jmpc(flags,addr)
+  addr=addr.to_i.to_s(16).rjust(4,"0")
+  byte1=addr[0..1].to_i(16)
+  byte2=addr[2..3].to_i(16)
+  write_combined(9,flags)
+  $outfile.print byte1.chr
+  $outfile.print byte2.chr
+end
 def hlt()
   $outfile.print 0xB0.chr
+end
+def in(reg,port)
+  write_combined(12,reg)
+  $outfile.print port.chr
+end
+def out(reg,port)
+  write_combined(13,reg)
+  $outfile.print port.chr
 end
 def conv(str)
   if str.match(/0x([0-9a-f]+)/i)
@@ -77,14 +93,55 @@ def conv(str)
   if str.match(/([0-9]+)/)
     return $1.to_i
   end
+  if $labels.include? str
+    return $labels[str]
+  end
   return str
 end
-mtable.add("load","stor","loadp","storp","lodi","lodip","arith","ariti","mov","hlt")
+mtable.add("load","stor","loadp","storp","lodi","lodip","arith","ariti","mov","jmpc","hlt","in","out")
+lengths={
+  "LOAD"=>3,
+  "STOR"=>3,
+  "LOADP"=>2,
+  "STORP"=>2,
+  "LODI"=>2,
+  "LODIP"=>3,
+  "ARITH"=>3,
+  "ARITI"=>3,
+  "MOV"=>2,
+  "JMPC"=>3,
+  "HLT"=>1,
+  "CALL"=>3,
+  "RET"=>1,
+  "IN"=>2,
+  "OUT"=>2,
+  "PUSH"=>1,
+  "POP"=>1
+}
+$labels={}
+i=0
 $infile.split("\n").each do |line|
+  next if line==""
   temp=line.split(" ")
   op=temp.shift
+  next if op[0]=="#"
   args=temp.join(" ").split(",").map{|x| conv(x)}
-  temp=[]
+  if op.match(/(.+):/)
+    lname=$1
+    puts "Label #{lname}"
+    $labels[lname]=i
+  else
+    puts "Instruction #{op}"
+    i+=lengths[op]
+  end
+end
+$infile.split("\n").each do |line|
+  next if line==""
+  temp=line.split(" ")
+  op=temp.shift
+  next if op[0]=="#"
+  next if op.match(/(.+):/)
+  args=temp.join(" ").split(",").map{|x| conv(x)}
   if conv(op).is_a? Numeric
     puts "Writing #{op}"
     $outfile.print conv(op).chr

@@ -15,15 +15,15 @@
 LODIP 0,buf
 LODI 0,0
 OUT 0,1
-.loop:
+ge_loop:
   IN 0,0
-  JMPC 1,.loop
+  JMPC 1,ge_loop
   ARITI CMP,0,0,0x0A
-  JMPC 2,.exit
+  JMPC 2,ge_exit
   STORP 0,0
   ARITI ADD,14,14,1
-  JMPC 0,.loop
-.exit:
+  JMPC 0,ge_loop
+ge_exit:
 HLT
 
-buf:0
+buf: 0
