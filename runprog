@@ -1,0 +1,15 @@
+#! /usr/bin/env ruby
+require_relative "cpu"
+require "slop"
+opts = Slop.parse do |o|
+  o.bool "-d", "--debug", "Activate debugging"
+  o.bool "-s", "--step", "Activate step mode. Also turns on debugging"
+end
+fname=opts.arguments[0]
+opts=opts.to_hash
+raise ArgumentError, "Program name required" if fname==nil
+fname+=".bin" unless fname.include? ".bin"
+cpu=CPU.new(fname)
+cpu.setdebug if opts[:debug] or opts[:step]
+cpu.setstep if opts[:step]
+cpu.run
