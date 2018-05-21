@@ -136,7 +136,8 @@ def parse_asm_line(line)
         label = parts.shift.chomp
       end
       op = parts.shift #first or second token
-      args = parts #anything left
+      op = conv(op) if conv(op).is_a? Numeric
+      args = parts.join(" ").split(",").map{|x| conv(x)} #anything left
      end
   end
   {:label=>label, :op=>op, :args=>args}
@@ -161,13 +162,10 @@ end
 
 #second pass, generate code
 $infile.split("\n").each do |line|
-  next if line==""
-  temp=line.split(" ")
-  op=temp.shift
-  next if op[0]=="#"
-  next if op.match(/(.+):/)
-  args=temp.join(" ").split(",").map{|x| conv(x)}
-  if conv(op).is_a? Numeric
+  parsed = parse_asm_line(line)
+  label, op, args = parsed.values_at(:label, :op, :args)
+  next if op==nil
+  if op.is_a? Numeric
     puts "Writing #{op}"
     $outfile.print conv(op).chr
   else
