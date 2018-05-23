@@ -9,87 +9,85 @@ else
 end
 $infile=File.read(name)
 $outfile=File.open(name.gsub(".t8",".bin"),"w")
+$listfile=File.open(name.gsub(".t8",".lst"),"w")
 $ops=["ADD","SUB","ADC","SBB","CMP","AND","OR","NOT"]
+
 def write_combined(nib1,nib2)
   $outfile.print ("#{nib1.to_s(16)}0".to_i(16)+nib2).chr
 end
+
 def load(reg,addr)
   raise ArgumentError, "Register #{reg} is out of bounds." if reg > 15
   addr=addr.to_s(16).rjust(4,"0")
   byte1=addr[0..1].to_i(16)
   byte2=addr[2..3].to_i(16)
-  write_combined(0,reg)
-  $outfile.print byte1.chr
-  $outfile.print byte2.chr
+  [0x00+reg, byte1, byte2]
 end
+
 def stor(reg,addr)
   raise ArgumentError, "Register #{reg} is out of bounds." if reg > 15
   addr=addr.to_i.to_s(16).rjust(4,"0")
   byte1=addr[0..1].to_i(16)
   byte2=addr[2..3].to_i(16)
-  write_combined(1,reg)
-  $outfile.print byte1.chr
-  $outfile.print byte2.chr
+  [0x10+reg, byte1, byte2]
 end
+
 def loadp(reg,pointer)
   raise ArgumentError, "Register #{reg} is out of bounds." if reg > 15
   raise ArgumentError, "Pointer #{pointer} is out of bounds." if pointer > 1
-  write_combined(2,reg)
-  $outfile.print pointer.chr
+  [0x20 + reg, pointer]
 end
+
 def storp(reg,pointer)
   raise ArgumentError, "Register #{reg} is out of bounds." if reg > 15
   raise ArgumentError, "Pointer #{pointer} is out of bounds." if pointer > 1
-  write_combined(3,reg)
-  $outfile.print pointer.chr
+  [0x30 + reg, pointer]
 end
+
 def lodi(pointer,data)
-  write_combined(4,pointer)
-  $outfile.print data.chr
+  [0x40 + pointer, data]
 end
+
 def lodip(pointer,data)
   data=data.to_s(16).rjust(4,"0")
   byte1=data[0..1].to_i(16)
   byte2=data[2..3].to_i(16)
-  write_combined(5,pointer)
-  $outfile.print byte1.chr
-  $outfile.print byte2.chr
+  [0x50 + pointer, byte1, byte2]
 end
+
 def arith(op,dest,s1,s2)
   op=$ops.index(op)
-  write_combined(6,op)
-  $outfile.print dest.chr
-  write_combined(s1,s2)
+  [0x60 + op, dest, (s1<<4) + s2]
 end
+
 def ariti(op,dest,s1,data)
   op=$ops.index(op)
-  write_combined(7,op)
-  write_combined(dest,s1)
-  $outfile.print data.chr
+  [0x70 + op, (dest<<4) + s1, data]
 end
+
 def mov(r1,r2)
-  $outfile.print 0x80.chr
-  write_combined(r1,r2)
+  [0x80, (r1<<4) + r2]
 end
+
 def jmpc(flags,addr)
   addr=addr.to_i.to_s(16).rjust(4,"0")
   byte1=addr[0..1].to_i(16)
   byte2=addr[2..3].to_i(16)
-  write_combined(9,flags)
-  $outfile.print byte1.chr
-  $outfile.print byte2.chr
+  [0x90+flags, byte1, byte2]
 end
+
 def hlt()
-  $outfile.print 0xB0.chr
+  [0xB0]
 end
+
 def in(reg,port)
-  write_combined(12,reg)
-  $outfile.print port.chr
+  [0xC0 + reg, port]
 end
+
 def out(reg,port)
-  write_combined(13,reg)
-  $outfile.print port.chr
+  [0xD0 + reg, port]
 end
+
 def conv(str)
   if str.match(/0x([0-9a-f]+)/i)
     return $1.to_i(16)
@@ -102,6 +100,7 @@ def conv(str)
   end
   return str
 end
+
 mtable.add("load","stor","loadp","storp","lodi","lodip","arith","ariti","mov","jmpc","hlt","in","out")
 lengths={
   "LOAD"=>3,
@@ -135,8 +134,10 @@ def parse_asm_line(line)
       if parts[0].match(/(.+):/)
         label = parts.shift.chomp
       end
-      op = parts.shift #first or second token
-      op = conv(op) if conv(op).is_a? Numeric
+      if parts.length > 0
+        op = parts.shift #first or second token
+        op = conv(op) if conv(op).is_a? Numeric
+      end
       args = parts.join(" ").split(",").map{|x| conv(x)} #anything left
      end
   end
@@ -161,6 +162,7 @@ $infile.split("\n").each do |line|
 end
 
 #second pass, generate code
+i = 0
 $infile.split("\n").each do |line|
   parsed = parse_asm_line(line)
   label, op, args = parsed.values_at(:label, :op, :args)
@@ -168,10 +170,22 @@ $infile.split("\n").each do |line|
   if op.is_a? Numeric
     puts "Writing #{op}"
     $outfile.print conv(op).chr
+    i += 1
   else
     puts "Got #{op} #{args.join(",")}"
     op=op.downcase
-    mtable.call(op,*args)
+    code = mtable.call(op,*args)
+    #write to bin file
+    code.each do |byte|
+      $outfile.print byte.chr
+    end
+    #write to list file
+    $listfile.print (i.to_s(16).rjust(4, "0") + " ")
+    code.each do |byte|
+      $listfile.print (byte.to_s(16).rjust(2, "0") + " ")
+    end
+    i += code.length
   end
+  $listfile.print line + "\n"
 end
 $outfile.close
